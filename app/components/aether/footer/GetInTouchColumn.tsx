@@ -7,9 +7,6 @@ interface GetInTouchColumnProps {
 const GetInTouchColumn = ({ className = "" }: GetInTouchColumnProps) => {
   return (
     <div className={`flex flex-col justify-center max-w-xl ${className}`}>
-      <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3">
-        Get in touch
-      </p>
       <h2 className="serif text-4xl md:text-5xl mb-6">
         Quiet interfaces <br />
         for bold ideas.
@@ -30,8 +27,12 @@ const GetInTouchColumn = ({ className = "" }: GetInTouchColumnProps) => {
           </span>
         ))}
       </div>
+      
+      <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mt-6">
+        Get in touch
+      </p>
 
-      <div className="mt-8 space-y-3 text-sm text-gray-400">
+      <div className="mt-3 space-y-3 text-sm text-gray-400">
         <div>
           <div className="text-[11px] uppercase tracking-[0.25em] text-gray-500 mb-1">
             Email

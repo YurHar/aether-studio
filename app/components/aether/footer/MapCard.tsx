@@ -10,7 +10,7 @@ const MapCard = ({ activeCity, onCityChange }: MapCardProps) => {
   const city = CITY_CONFIG[activeCity];
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center mb-5">
       <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-black/50 p-5 shadow-[0_22px_80px_rgba(0,0,0,0.9)] backdrop-blur-md">
         <div className="flex items-center justify-between mb-4">
           <div className="text-[11px] uppercase tracking-[0.25em] text-gray-500">

@@ -2,33 +2,34 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowUp } from 'lucide-react';
-import { AIChatModalProps, ChatMessage } from './type';
+import { X } from 'lucide-react';
+import type { AIChatModalProps, ChatMessage } from './type';
 
-async function sendMessageToAI(
-  message: string,
-  history: ChatMessage[]
-): Promise<string> {
-  return Promise.resolve(
-    "Thanks for your message! This is a placeholder AI reply. You can connect me to a real api backend later."
-  );
-}
+import { AI_CHAT_COPY } from './ai-chat/aiChatConfig';
+import { sendMessageToAI } from './ai-chat/aiChatService';
+import ChatHeader from './ai-chat/ChatHeader';
+import ChatMessages from './ai-chat/ChatMessages';
+import ChatInput from './ai-chat/ChatInput';
 
 const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
       role: 'assistant',
-      content:
-        "Hi, I’m the Aether AI assistant. Ask me about projects, collaboration, or anything you’d like to know.",
+      content: AI_CHAT_COPY.initialGreeting,
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const idRef = useRef(2);
+  const messagesRef = useRef<ChatMessage[]>(messages);
 
-  // Close on Escape
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -40,7 +41,6 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -62,8 +62,10 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     setInput('');
     setIsLoading(true);
 
+    const historyForAI = [...messagesRef.current, userMessage];
+
     try {
-      const replyText = await sendMessageToAI(trimmed, [...messages, userMessage]);
+      const replyText = await sendMessageToAI(trimmed, historyForAI);
 
       const assistantMessage: ChatMessage = {
         id: idRef.current++,
@@ -76,8 +78,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
       const assistantMessage: ChatMessage = {
         id: idRef.current++,
         role: 'assistant',
-        content:
-          'Sorry, something went wrong while contacting the AI service. Please try again in a moment.',
+        content: AI_CHAT_COPY.errorMessage,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } finally {
@@ -94,7 +95,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.28, ease: 'easeOut' }}
-          onClick={onClose} // click on backdrop closes
+          onClick={onClose}
         >
           {/* Soft glow behind modal */}
           <motion.div
@@ -124,9 +125,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               damping: 22,
             }}
             className="relative w-full max-w-2xl rounded-2xl bg-black/85 border border-gray-700/80 p-5 md:p-6 shadow-[0_18px_55px_rgba(0,0,0,0.9)] flex flex-col max-h-[80vh]"
-            onClick={(e) => e.stopPropagation()} // prevent close when clicking inside
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button with lucide X */}
+            {/* Close button */}
             <button
               type="button"
               onClick={onClose}
@@ -136,95 +137,20 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Header */}
-            <motion.div
-              className="mb-4 pr-6"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08, duration: 0.2, ease: 'easeOut' }}
-            >
-              <h3
-                id="ai-chat-title"
-                className="serif text-xl md:text-2xl tracking-tight mb-1"
-              >
-                Talk with Aether AI
-              </h3>
-              <p className="text-xs md:text-sm text-gray-400">
-                Ask anything about the studio, projects, availability or ideas.
-              </p>
-            </motion.div>
+            <ChatHeader />
 
-            {/* Chat messages */}
-            <motion.div
-              className="flex-1 overflow-y-auto rounded-xl bg-gray-900/60 border border-gray-800 p-3 md:p-4 space-y-3"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12, duration: 0.22, ease: 'easeOut' }}
-            >
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-white text-black rounded-br-sm'
-                        : 'bg-gray-800 text-gray-100 rounded-bl-sm'
-                    }`}
-                  >
-                    {msg.content}
-                  </motion.div>
-                </div>
-              ))}
+            <ChatMessages
+              messages={messages}
+              isLoading={isLoading}
+              messagesEndRef={messagesEndRef}
+            />
 
-              {isLoading && (
-                <div className="flex justify-start">
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="bg-gray-800 text-gray-300 rounded-2xl rounded-bl-sm px-3 py-2 text-xs flex items-center gap-2"
-                  >
-                    <span className="inline-block h-2 w-2 rounded-full bg-gray-400 animate-pulse" />
-                    Aether AI is thinking…
-                  </motion.div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </motion.div>
-
-            {/* Input */}
-            <motion.form
+            <ChatInput
+              input={input}
+              isLoading={isLoading}
+              onChange={setInput}
               onSubmit={handleSubmit}
-              className="mt-4 flex gap-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16, duration: 0.22, ease: 'easeOut' }}
-            >
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your question..."
-                className="flex-1 rounded-full bg-gray-900/80 border border-gray-700 px-4 py-2 text-sm text-white outline-none focus:border-gray-400 focus:ring-0 transition-colors"
-              />
-              <motion.button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                whileTap={{ scale: 0.94 }}
-                className="h-10 w-10 flex items-center justify-center rounded-full cursor-pointer bg-white text-black shadow-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Send message"
-              >
-                <ArrowUp className="h-4 w-4" />
-              </motion.button>
-            </motion.form>
+            />
           </motion.div>
         </motion.div>
       )}
