@@ -57,7 +57,7 @@ const Footer = () => {
           <div className="w-full h-[1px] bg-gray-700 mt-10 mb-6" />
 
           <div className="flex justify-between items-center text-sm text-gray-500">
-            <div>© 2024 Aether Studio</div>
+            <div>© {new Date().getFullYear()} Aether Studio</div>
             <div className="flex gap-6">
               <a href="#" className="hover:text-white transition-colors">
                 Instagram
